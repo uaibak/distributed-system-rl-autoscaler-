@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./services/backend
+    container_name: distributed-backend
+    environment:
+      - INSTANCE_ID=backend-1
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "5001:5001"
+    networks:
+      - distributed-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./services/frontend
+    container_name: distributed-frontend
+    environment:
+      - INSTANCE_ID=frontend-1
+      - BACKEND_URL=http://backend:5001
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "5000:5000"
+    networks:
+      - distributed-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: distributed-prometheus
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - distributed-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=24h'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: distributed-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - distributed-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+networks:
+  distributed-network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

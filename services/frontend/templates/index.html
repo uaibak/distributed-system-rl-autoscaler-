@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Distributed System Frontend</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .info { background: #f0f0f0; padding: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Hello World from Frontend Service</h1>
+    <div class="info">
+        <p><strong>Instance ID:</strong> {{ instance_id }}</p>
+        <p><strong>Timestamp:</strong> {{ timestamp }}</p>
+        <p><strong>Backend URL:</strong> {{ backend_url }}</p>
+    </div>
+    <p>Try these endpoints:</p>
+    <ul>
+        <li><a href="/api/info">/api/info</a> - Service information</li>
+        <li><a href="/api/calculate?n=1000">/api/calculate?n=1000</a> - Calculate primes</li>
+        <li><a href="/api/call-backend">/api/call-backend</a> - Call backend service</li>
+        <li><a href="/api/health">/api/health</a> - Health check</li>
+        <li><a href="/metrics">/metrics</a> - Prometheus metrics</li>
+    </ul>
+</body>
+</html>
